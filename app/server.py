@@ -1,12 +1,12 @@
 import flask
+from errors import HttpError
 from flask import views, jsonify, request  # Импортируем глобальную переменную request
 # jsonify берёт словарь или список, превращает в корректный http-ответ.
-from models import Session, User
-from sqlalchemy.exc import IntegrityError  # Для проверки на уникальность (юзера)
-from errors import HttpError
-from schema import CreateUser, UpdateUser
-from tools import validate
 from flask_bcrypt import Bcrypt
+from models import Session, User
+from schema import CreateUser, UpdateUser
+from sqlalchemy.exc import IntegrityError  # Для проверки на уникальность (юзера)
+from tools import validate
 
 app = flask.Flask("app")  # Создаём экземпляр класса Flask. Это по сути WEB-server
 bcrypt = Bcrypt(app)
@@ -32,8 +32,9 @@ def after_request(response: flask.Response):
     request.session.close()
     return response
 
-@app.errorhandler(404)
-def error_handler(HttpError):
+# @app.errorhandler(404)
+@app.errorhandler(HttpError)
+def error_handler(error):
     response = jsonify({"error": error.description})
     # jsonify берёт словарь или список, превращает в корректный http-ответ.
     response.status_code = error.status_code
@@ -50,7 +51,7 @@ def add_user(user: User):  # Принимает самого юзера (ORM-м�
         request.session.add(user)
         request.session.commit()
     except IntegrityError as err:
-        raise HttpError(status_code=409, description= "user already exists")
+        raise HttpError(status_code=409, description="user already exists")
 
 
 # Очень удобно будет передавать id usera задавать в самом URL в качестве переменной. Flask такое умеет
@@ -73,10 +74,11 @@ class UserView(views.MethodView):
         #  Эти операторы обеспечивают гибкий способ обработки аргументов функций и позволяют писать функции,
         #  которые могут принимать переменное количество аргументов.
         add_user(user)  # Добавляем в БД
+        return jsonify({"id": user.id})
 
     def patch(self, user_id: int):
         user = get_user(user_id)
-        user_data = validate(CreateUser, request.json)  # Валидируем входящий json
+        user_data = validate(UpdateUser, request.json)  # Валидируем входящий json
         if 'password' in user_data:  # Если пароль есть в user_data
             user_data['password'] = hash_password(user_data['password'])  # То хешируем пароль
         # Нужно проитерироваться по парам: ключ - значение, которые есть в user_data
@@ -88,6 +90,7 @@ class UserView(views.MethodView):
     def delete(self, user_id: int):
         user = get_user(user_id)
         self.session.delete(user)
+        self.session.commit()
         return jsonify({"status": "ok"})
 
 
