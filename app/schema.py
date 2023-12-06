@@ -7,7 +7,7 @@ from typing import Optional, Type
 
 class AbstractUser(pydantic.BaseModel):
     name: str
-    passsword: str
+    password: str
 
     @pydantic.field_validator("name")
     @classmethod  # Особенность библиотеки pydantic
@@ -25,7 +25,7 @@ class AbstractUser(pydantic.BaseModel):
 
 class CreateUser(AbstractUser):
     name: str
-    passsword: str
+    password: str
 
 
 class UpdateUser(AbstractUser):
