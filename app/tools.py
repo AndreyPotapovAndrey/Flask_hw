@@ -1,6 +1,6 @@
-from schema import SCHEMA_CLASS
-from pydantic import ValidationError
 from errors import HttpError
+from pydantic import ValidationError
+from schema import SCHEMA_CLASS
 
 
 def validate(schema_cls: SCHEMA_CLASS, json_data: dict | list):
@@ -12,8 +12,11 @@ def validate(schema_cls: SCHEMA_CLASS, json_data: dict | list):
         # параметр exclude_unset=True
     except ValidationError as er:
         error = er.errors()[0]  # Метод errors возвращает список ошибок
-        error.pop("ctx", None)  # Удаляем свойство ctx, т.к. там инф-ция, которую мы не хотим передавать пользователю
+        error.pop(
+            "ctx", None
+        )  # Удаляем свойство ctx, т.к. там инф-ция, которую мы не хотим передавать пользователю
         raise HttpError(400, error)
+
 
 # Если мы будем импортировать из server.py, то может получиться цикличный импорт. Поэтому создадим отдельный модуль, в
 # котором будем хранить ошибки (errors.py)
