@@ -42,7 +42,7 @@ class Ads(Base):
     def dict(self):
         return {
             "id": self.id,
-            "name": self.name,
+            "title": self.title,
             "description": self.description,
             "registration_time": self.registration_time.isoformat(),
             "owner": self.owner
