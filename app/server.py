@@ -62,6 +62,7 @@ class AdsView(views.MethodView):
     def post(self):
         ads_data = validate(CreateAds, request.json)  # Валидируем входящий json
         ads = Ads(**ads_data)  # Создаём экземпляр класса Ads.
+        add_ads(ads)
         return jsonify({"id": ads.id})
 
     def patch(self, ads_id: int):
