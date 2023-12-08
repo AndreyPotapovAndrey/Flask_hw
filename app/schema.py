@@ -3,40 +3,33 @@ from typing import Optional, Type
 
 import pydantic
 
-# pip install pydantic Через эту библиотеку очень хорошо валидировать данные по определённому шаблону
-# Различие create от update в том, что в update - все поля опциональны (from typing import Optional)
 
+class AbstractAds(pydantic.BaseModel, ABC):
+    title: str
+    description: str
+    owner: str
 
-class AbstractUser(pydantic.BaseModel, ABC):
-    name: str
-    password: str
-
-    @pydantic.field_validator("name")
-    @classmethod  # Особенность библиотеки pydantic
-    def name_length(cls, v: str) -> str:
+    @pydantic.field_validator("title")
+    @classmethod
+    def ads_length(cls, v: str) -> str:
         if len(v) > 100:
             raise ValueError(
-                "Maxima length of name is 100"
-            )  # Доп. проверка на длину имени
-        return v
-
-    @pydantic.field_validator("password")
-    @classmethod
-    def secure_password(cls, v: str) -> str:
-        if len(v) < 8:
-            raise ValueError(f"Minimal length of password is 8")
+                "Maxima length of title is 100"
+            )
         return v
 
 
-class CreateUser(AbstractUser):
-    name: str
-    password: str
+class CreateAds(AbstractAds):
+    title: str
+    description: str
+    owner: str
 
 
-class UpdateUser(AbstractUser):
-    name: Optional[str] = None
-    password: Optional[str] = None
+class UpdateAds(AbstractAds):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    owner: Optional[str] = None
 
 
-SCHEMA_CLASS = Type[CreateUser | UpdateUser]  # Создаём тип данных для передачи классов
-SCHEMA = CreateUser | UpdateUser
+SCHEMA_CLASS = Type[CreateAds | UpdateAds]  # Создаём тип данных для передачи классов
+SCHEMA = CreateAds | UpdateAds

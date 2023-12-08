@@ -27,31 +27,25 @@ class Base(DeclarativeBase):
     pass
 
 
-class User(Base):
-    __tablename__ = "app_users"
+class Ads(Base):
+    __tablename__ = "ads_table"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(
-        String(100), unique=True, index=True, nullable=False
-    )
-    # Уникальность может нарушиться при (ставке?) создании одного пользователя и при update
-    # Индексируем для логина. Не должно
-    # быть пустым (nullable=False) также для удобства делаем типизацию ([str])
-    password: Mapped[str] = mapped_column(String(100), nullable=False)
+    title: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
+    description: Mapped[str] = mapped_column(String, nullable=False)
     registration_time: Mapped[datetime.datetime] = mapped_column(
         DateTime, server_default=func.now()
     )
-    # Выполняем на стороне базы функцию
-    # сохранения с указанием даты и времени "сейчас"
+    owner:  Mapped[str] = mapped_column(String(100), index=True, nullable=False)
 
-    # Чтобы вызывать не как метод, а как свойство пользователя (чтобы не ставить "()"), применяем декоратор property
     @property
     def dict(self):
         return {
             "id": self.id,
             "name": self.name,
-            "registration_time": self.registration_time.isoformat()
-            # Метод isoformat преобразует объект datetime в строчку формата iso
+            "description": self.description,
+            "registration_time": self.registration_time.isoformat(),
+            "owner": self.owner
         }
 
 

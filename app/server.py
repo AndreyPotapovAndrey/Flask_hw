@@ -1,31 +1,15 @@
 import flask
 from errors import HttpError
-from flask import jsonify, request, views  # Импортируем глобальную переменную request
-
-# jsonify берёт словарь или список, превращает в корректный http-ответ.
+from flask import jsonify, request, views
 from flask_bcrypt import Bcrypt
-from models import Session, User
-from schema import CreateUser, UpdateUser
+from models import Session, Ads
+from schema import CreateAds, UpdateAds
 from sqlalchemy.exc import IntegrityError  # Для проверки на уникальность (юзера)
 from tools import validate
 
 app = flask.Flask("app")  # Создаём экземпляр класса Flask. Это по сути WEB-server
 bcrypt = Bcrypt(app)
 # Создаём экземпляр класса Bcrypt, передаём туда в качестве аргумента приложение, которое мы создали
-
-
-def hash_password(password: str):
-    password = password.encode()  # Преобразовываем строчку в байты
-    return bcrypt.generate_password_hash(
-        password
-    ).decode()  # Обратно преобразовываем в строку. Можно записывать в базу
-
-
-def check_password(password: str, hashed_password: str):
-    # Принимает пароль, который отправляет пользователь. И пароль, который лежит в базе.
-    password = password.encode()
-    hashed_password = hashed_password.encode()
-    return bcrypt.check_password_hash(password, hashed_password)
 
 
 @app.before_request
@@ -51,78 +35,62 @@ def error_handler(error):
     return response
 
 
-def get_user(user_id: int):
-    user = request.session.get(User, user_id)
-    if user is None:
-        raise HttpError(404, "user not found")
-    return user
+def get_ads(ads_id: int):
+    ads = request.session.get(Ads, ads_id)
+    if ads is None:
+        raise HttpError(404, "ads not found")
+    return ads
 
 
-def add_user(user: User):  # Принимает самого юзера (ORM-модель) и добавляет в базу
-    try:  # Проверка на уникальность юзера
-        request.session.add(user)
+def add_ads(ads: Ads):  # Принимает само объявление (ORM-модель) и добавляет в базу
+    try:  # Проверка на уникальность объявления
+        request.session.add(ads)
         request.session.commit()
     except IntegrityError as err:
-        raise HttpError(status_code=409, description="user already exists")
+        raise HttpError(status_code=409, description="ads already exists")
 
 
-# Очень удобно будет передавать id usera задавать в самом URL в качестве переменной. Flask такое умеет
-
-
-class UserView(views.MethodView):
+class AdsView(views.MethodView):
     @property
     def session(self) -> Session:
         return request.session  # Возвращается объект сессии
 
-    def get(self, user_id: int):
-        user = get_user(user_id)
-        return jsonify(user.dict)
+    def get(self, ads_id: int):
+        ads = get_ads(ads_id)
+        return jsonify(ads.dict)
 
     def post(self):
-        user_data = validate(CreateUser, request.json)  # Валидируем входящий json
-        user_data["password"] = hash_password(user_data["password"])  # Хешируем пароль
-        user = User(**user_data)  # Создаём экземпляр класса User.
-        #  В Python операторы * и ** используются, чтобы упаковывать и распаковывать итерабельные объекты и словари.
-        #  Эти операторы обеспечивают гибкий способ обработки аргументов функций и позволяют писать функции,
-        #  которые могут принимать переменное количество аргументов.
-        add_user(user)  # Добавляем в БД
-        return jsonify({"id": user.id})
+        ads_data = validate(CreateAds, request.json)  # Валидируем входящий json
+        ads = Ads(**ads_data)  # Создаём экземпляр класса Ads.
+        return jsonify({"id": ads.id})
 
-    def patch(self, user_id: int):
-        user = get_user(user_id)
-        user_data = validate(UpdateUser, request.json)  # Валидируем входящий json
-        if "password" in user_data:  # Если пароль есть в user_data
-            user_data["password"] = hash_password(
-                user_data["password"]
-            )  # То хешируем пароль
-        # Нужно проитерироваться по парам: ключ - значение, которые есть в user_data
-        for key, value in user_data.items():
-            setattr(user, key, value)  # Устанавливаем в поля аттрибуты
-            add_user(
-                user
-            )  # Вызываем add_user для того, чтобы изменения записались в базу
-        return jsonify({"id": user.id})  # Возвращаем id юзера, которого мы создали
+    def patch(self, ads_id: int):
+        ads = get_ads(ads_id)
+        ads_data = validate(UpdateAds, request.json)  # Валидируем входящий json
+        for key, value in ads_data.items():
+            setattr(ads, key, value)  # Устанавливаем в поля аттрибуты
+            add_ads(ads)  # Вызываем add_ads для того, чтобы изменения записались в базу
+        return jsonify({"id": ads.id})  # Возвращаем id объявления, которого мы создали
 
-    def delete(self, user_id: int):
-        user = get_user(user_id)
-        self.session.delete(user)
+    def delete(self, ads_id: int):
+        ads = get_ads(ads_id)
+        self.session.delete(ads)
         self.session.commit()
         return jsonify({"status": "ok"})
 
 
-user_view = UserView.as_view("user_view")
-# В "user_view" передаётся метаинформация. В принципе можно в круглые скобки написать что угодно. Но принято писать то,
-# что подходит по смыслу
+ads_view = AdsView.as_view("ads_view")
+
 
 app.add_url_rule(
-    rule="/users/<int:user_id>", view_func=user_view, methods=["GET", "PATCH", "DELETE"]
+    rule="/ads/<int:ads_id>", view_func=ads_view, methods=["GET", "PATCH", "DELETE"]
 )
-app.add_url_rule(rule="/users", view_func=user_view, methods=["POST"])
-# Говорим, что здесь будет переменная типа int (<user_id:int>)
+app.add_url_rule(rule="/ads", view_func=ads_view, methods=["POST"])
+# Говорим, что здесь будет переменная типа int (<ads_id:int>)
 # У самого апликэйшена Flask есть метод add_url_rule для привязки url
 # (певый аргумент - сам url, второй - функция
 # А также мы может передать сюда список методов, по которым эта view будет доступна )
-# Нам нужно преобразовать UserView в совместимый объект с view_func. Для этого есть метод as_view
+# Нам нужно преобразовать AdsView в совместимый объект с view_func. Для этого есть метод as_view
 
 
 if __name__ == "__main__":

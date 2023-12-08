@@ -1,16 +1,14 @@
 import requests
 
-# response = requests.post("http://127.0.0.1:5000/users",
-#                          json={"name": "user_1", "password": "jmbpdotrkmsdrij09oij4903tujnuinvr-09"}
-#                          # headers={"token": "some_token"},
-#                          # params={"name": "John", "age": 20}
-#                          # Можно использовать метод params, а не явно передавать значения в query string
-#                          )
-# print(response.status_code)
-# print(response.text)
+response = requests.post("http://127.0.0.1:5000/ads",
+                         json={"title": "Iphone X",
+                               "description": "Prodam nedorogo",
+                               "owner": "Andrey"})
+print(response.status_code)
+print(response.text)
 
 # response = requests.get(
-#     "http://127.0.0.1:5000/users/1",
+#     "http://127.0.0.1:5000/ads/1",
 # )
 # print(response.status_code)
 # print(response.text)
@@ -29,15 +27,15 @@ import requests
 # print(response.status_code)
 # print(response.text)
 
-response = requests.delete(
-    "http://127.0.0.1:5000/users/1",
-)
-print(response.status_code)
-print(response.text)
+# response = requests.delete(
+#     "http://127.0.0.1:5000/users/1",
+# )
+# print(response.status_code)
+# print(response.text)
 
 
-response = requests.get(
-    "http://127.0.0.1:5000/users/1",
-)
-print(response.status_code)
-print(response.text)
+# response = requests.get(
+#     "http://127.0.0.1:5000/ads/1",
+# )
+# print(response.status_code)
+# print(response.text)
