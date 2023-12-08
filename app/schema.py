@@ -13,9 +13,7 @@ class AbstractAds(pydantic.BaseModel, ABC):
     @classmethod
     def ads_length(cls, v: str) -> str:
         if len(v) > 100:
-            raise ValueError(
-                "Maxima length of title is 100"
-            )
+            raise ValueError("Maxima length of title is 100")
         return v
 
 

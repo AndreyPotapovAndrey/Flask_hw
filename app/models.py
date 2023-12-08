@@ -36,7 +36,7 @@ class Ads(Base):
     registration_time: Mapped[datetime.datetime] = mapped_column(
         DateTime, server_default=func.now()
     )
-    owner:  Mapped[str] = mapped_column(String(100), index=True, nullable=False)
+    owner: Mapped[str] = mapped_column(String(100), index=True, nullable=False)
 
     @property
     def dict(self):
@@ -45,7 +45,7 @@ class Ads(Base):
             "title": self.title,
             "description": self.description,
             "registration_time": self.registration_time.isoformat(),
-            "owner": self.owner
+            "owner": self.owner,
         }
 
 

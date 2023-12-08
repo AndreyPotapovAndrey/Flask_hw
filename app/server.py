@@ -2,7 +2,7 @@ import flask
 from errors import HttpError
 from flask import jsonify, request, views
 from flask_bcrypt import Bcrypt
-from models import Session, Ads
+from models import Ads, Session
 from schema import CreateAds, UpdateAds
 from sqlalchemy.exc import IntegrityError  # Для проверки на уникальность (юзера)
 from tools import validate
